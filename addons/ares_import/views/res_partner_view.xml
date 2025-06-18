@@ -1,0 +1,16 @@
+<odoo>
+  <record id="view_partner_form_ares" model="ir.ui.view">
+    <field name="name">res.partner.form.ares</field>
+    <field name="model">res.partner</field>
+    <field name="inherit_id" ref="base.view_partner_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//form/sheet" position="inside">
+        <button name="action_fetch_ares_data"
+                string="Načíst z ARES"
+                type="object"
+                class="btn-primary"/>
+      </xpath>
+    </field>
+  </record>
+</odoo>
+
