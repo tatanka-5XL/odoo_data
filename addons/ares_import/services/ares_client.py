@@ -1,36 +1,43 @@
 import requests
 
 def fetch_company_from_ares(ico):
-    url = f"https://ares.gov.cz/ekonomicke-subjekty?ico={ico}"
+    url = f"https://wwwinfo.mfcr.cz/ares/api/ekonomicke-subjekty/{ico}"
+
+    headers = {
+        "Accept": "application/json",
+        "User-Agent": "Odoo ARES Plugin - under development (Contact: petr.pribil@profisolv.cz / 776554003)"  
+    }
 
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
+        _logger.warning(f"when getting to fetch_company_fom_ares, ARES returned following response: {response}")
 
-        # Ensure it's JSON
-        content_type = response.headers.get('Content-Type', '')
-        if 'application/json' not in content_type:
-            return None  # Not valid JSON response
+
+        # ✅ Confirm JSON response
+        if "application/json" not in response.headers.get("Content-Type", ""):
+            _logger.warning("ARES did not return JSON")
+            _logger.warning("ARES body: %s", response.text[:500])
+            return None
 
         payload = response.json()
+        _logger.warning(f"ARES returned following data: {payload}")
+
     except Exception as e:
+        print("ARES fetch error:", str(e))
         return None
 
-    results = payload.get("ekonomickeSubjekty", [])
-    if not results:
+    _logger.warning(f"DID IT GET HERE?:  {response.json()}")
+
+    data = payload.get("ekonomickySubjekt")
+    if not data:
         return None
 
-    company = results[0]
-    name = company.get("obchodniJmeno")
-    address = company.get("sidlo", {})
-    street = address.get("textovaAdresa", "")
-    zip_code = str(address.get("psc") or "")
-    city = address.get("nazevObce") or ""
-
+    address = data.get("sidlo", {})
     return {
-        "name": name,
-        "street": street,
-        "city": city,
-        "zip": zip_code,
-        "vat": company.get("dic", ""),
+        "name": data.get("obchodniJmeno"),
+        "street": address.get("textovaAdresa", ""),
+        "city": address.get("nazevObce", ""),
+        "zip": str(address.get("psc", "")),
+        "vat": data.get("dic", ""),
     }
