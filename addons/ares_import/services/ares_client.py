@@ -1,7 +1,13 @@
 import requests
+import logging
+
+_logger = logging.getLogger(__name__)
 
 def fetch_company_from_ares(ico):
-    url = f"https://wwwinfo.mfcr.cz/ares/api/ekonomicke-subjekty/{ico}"
+    #url = f"https://wwwinfo.mfcr.cz/ares/api/ekonomicke-subjekty/{ico}"
+    #url = f"http://localhost:5000/ares/api/ekonomicke-subjekty/{ico}"
+    url = f"http://host.docker.internal:5000/ares/api/ekonomicke-subjekty/{ico}"
+
 
     headers = {
         "Accept": "application/json",
@@ -34,10 +40,14 @@ def fetch_company_from_ares(ico):
         return None
 
     address = data.get("sidlo", {})
+    cislo = address.get("cisloDomovni", "")
+    ulice = address.get("ulice", "")
+    vat = data.get("ico", "").strip().replace("CZ", "").replace(" ", "")
+    _logger.warning(f"VAT: {vat}")
     return {
         "name": data.get("obchodniJmeno"),
-        "street": address.get("textovaAdresa", ""),
+        "street": f"{ulice} {cislo}".strip(),
         "city": address.get("nazevObce", ""),
         "zip": str(address.get("psc", "")),
-        "vat": data.get("dic", ""),
+        "vat": data.get("ico", ""),
     }
